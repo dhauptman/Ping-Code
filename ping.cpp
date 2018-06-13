@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
 
   Timestamp = std::chrono::system_clock::now();
 
-  while(number_of_pings_sent < 10000) {
+  while(number_of_pings_sent < number_of_sends) {
     loop_start = std::chrono::system_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(loop_start - loop_end).count() > rate) {
       msg_out(tty_fd);
