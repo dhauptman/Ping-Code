@@ -221,6 +221,7 @@ int main(int argc, char *argv[]) {
   auto showhelp = false;
   auto rate = 20.0f;
   int number_of_sends = 0;
+  int number_of_read_bits = 1;
 
   auto parser =
   clara::Arg(PingOrPong, "Ping (1) or Pong (0)")("Specify if you are sending the ping (1) or recieving them (0)") |
@@ -229,6 +230,7 @@ int main(int argc, char *argv[]) {
   clara::Arg(NumberOfDevices, "Number of other Devices")("Number of other devices connected") |
   clara::Arg(rate, "Loop Rate (ms)")("Rate at which the program will send data") |
   clara::Arg(number_of_sends, "Number of Messages to Send")("Number of messages to Send") |
+  clara::Arg(number_of_read_bits, "Number of bits to needed before read")("Number of Bits Needed Before Read") |
   clara::Help(showhelp);
 
   try {
@@ -248,6 +250,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Number of Devices:  " << NumberOfDevices << "\n";
       std::cout << "Loop Rate (ms):  " << rate << "\n";
       std::cout << "Number of Messages to Send:  " << number_of_sends << "\n";
+      std::cout << "Number of Bits before Read:  " << number_of_read_bits << "\n";
     }
   }
   catch (std::exception const & e) {
@@ -284,7 +287,7 @@ int main(int argc, char *argv[]) {
   tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Raw mode
   tio.c_cflag = BAUD | CS8 | CREAD | CLOCAL; // 115200 BAUD, 8 bit Character Size mask, enable read, ignore control lines
   tio.c_oflag = 0; // Disable output flags
-  tio.c_cc[VMIN] = 17; // Minimum # of characters for noncanonical read
+  tio.c_cc[VMIN] = number_of_read_bits; // Minimum # of characters for noncanonical read
   tio.c_cc[VTIME] = 0; // No timeout for noncanonical read
   tcflush(tty_fd, TCIFLUSH); // Flush output/input data not transmitted
   tcsetattr(tty_fd, TCSANOW, &tio); // Set paramaters
