@@ -193,6 +193,7 @@ void handler(int signum) {
     outputFile << "Number of Pings Sent: \t" << number_of_pings_sent << "\n";
     outputFile << "Number of Pongs recieved: \t" << number_of_pongs_recieved << "\n";
     outputFile << "Number of Timeouts: \t" << number_of_timeouts << "\n";
+    outputFile << "Number of Mismatched Regex: \t" << mismatched_regex << "\n";
     outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
     outputFile.close();
     latencyFile.close();
@@ -204,6 +205,7 @@ void handler(int signum) {
     printf("Number of Corrupted Timestamps: %d\n", corrupted_timestamp);
     outputFile << "Number of Pongs Sent: \t" << number_of_pongs_sent << "\n";
     outputFile << "Number of Pings recieved: \t" << number_of_pings_recieved << "\n";
+    outputFile << "Number of Mismatched Regex: \t" << mismatched_regex << "\n";
     outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
     outputFile.close();
     pongFile.close();
@@ -229,7 +231,7 @@ int main(int argc, char *argv[]) {
   clara::Arg(Ident, "Identity Number")("Identification of the device sending") |
   clara::Arg(NumberOfDevices, "Number of other Devices")("Number of other devices connected") |
   clara::Arg(rate, "Loop Rate (ms)")("Rate at which the program will send data") |
-  clara::Arg(number_of_sends, "Number of Messages to Send")("Number of messages to Send") |
+  clara::Arg(number_of_sends, "Number of Messages to Send")("Number of messages to Send (0 for infinite)") |
   clara::Arg(number_of_read_bits, "Number of bits to needed before read")("Number of Bits Needed Before Read") |
   clara::Help(showhelp);
 
@@ -308,7 +310,7 @@ int main(int argc, char *argv[]) {
 
   Timestamp = std::chrono::system_clock::now();
 
-  while(number_of_pings_sent < number_of_sends) {
+  while(number_of_pings_sent < number_of_sends || number_of_sends == 0) {
     loop_start = std::chrono::system_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(loop_start - loop_end).count() > rate) {
       msg_out(tty_fd);
@@ -324,6 +326,7 @@ int main(int argc, char *argv[]) {
     outputFile << "Number of Pings Sent: \t" << number_of_pings_sent << "\n";
     outputFile << "Number of Pongs recieved: \t" << number_of_pongs_recieved << "\n";
     outputFile << "Number of Timeouts: \t" << number_of_timeouts << "\n";
+    outputFile << "Number of Mismatched Regex: \t" << mismatched_regex << "\n";
     outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
     outputFile.close();
     latencyFile.close();
@@ -335,6 +338,7 @@ int main(int argc, char *argv[]) {
     printf("Number of Corrupted Timestamps: %d\n", corrupted_timestamp);
     outputFile << "Number of Pongs Sent: \t" << number_of_pongs_sent << "\n";
     outputFile << "Number of Pings recieved: \t" << number_of_pings_recieved << "\n";
+    outputFile << "Number of Mismatched Regex: \t" << mismatched_regex << "\n";
     outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
     outputFile.close();
     pongFile.close();
