@@ -220,13 +220,15 @@ int main(int argc, char *argv[]) {
   auto NumberOfDevices = 0;
   auto showhelp = false;
   auto rate = 20.0f;
+  int number_of_sends = 0;
 
   auto parser =
-  clara::Arg(PingOrPong, "Ping or Pong")("Specify if you are sending the ping (1) or recieving them (0)") |
+  clara::Arg(PingOrPong, "Ping (1) or Pong (0)")("Specify if you are sending the ping (1) or recieving them (0)") |
   clara::Arg(PortName, "Port Name")("Specify where the device is connected (default is /dev/ttyUSB0") |
   clara::Arg(Ident, "Identity Number")("Identification of the device sending") |
-  clara::Arg(NumberOfDevices, "Number of Devices")("Number of devices connected") |
+  clara::Arg(NumberOfDevices, "Number of other Devices")("Number of other devices connected") |
   clara::Arg(rate, "Loop Rate (ms)")("Rate at which the program will send data") |
+  clara::Arg(number_of_sends, "Number of Messages to Send")("Number of messages to Send") |
   clara::Help(showhelp);
 
   try {
@@ -240,11 +242,12 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     else {
-      std::cout << "Ping or Pong  " << PingOrPong << "\n";
-      std::cout << "Port Name " << PortName << "\n";
-      std::cout << "Identity Number " << Ident << "\n";
-      std::cout << "Number of Devices  " << NumberOfDevices << "\n";
-      std::cout << "Loop Rate (ms)  " << rate << "\n";
+      std::cout << "Ping or Pong:  " << PingOrPong << "\n";
+      std::cout << "Port Name: " << PortName << "\n";
+      std::cout << "Identity Number: " << Ident << "\n";
+      std::cout << "Number of Devices:  " << NumberOfDevices << "\n";
+      std::cout << "Loop Rate (ms):  " << rate << "\n";
+      std::cout << "Number of Messages to Send:  " << number_of_sends << "\n";
     }
   }
   catch (std::exception const & e) {
@@ -281,7 +284,7 @@ int main(int argc, char *argv[]) {
   tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Raw mode
   tio.c_cflag = BAUD | CS8 | CREAD | CLOCAL; // 115200 BAUD, 8 bit Character Size mask, enable read, ignore control lines
   tio.c_oflag = 0; // Disable output flags
-  tio.c_cc[VMIN] = 17; // Minimum # of characters for noncanonical read
+  tio.c_cc[VMIN] = 1; // Minimum # of characters for noncanonical read
   tio.c_cc[VTIME] = 0; // No timeout for noncanonical read
   tcflush(tty_fd, TCIFLUSH); // Flush output/input data not transmitted
   tcsetattr(tty_fd, TCSANOW, &tio); // Set paramaters
@@ -302,12 +305,39 @@ int main(int argc, char *argv[]) {
 
   Timestamp = std::chrono::system_clock::now();
 
-  while(1) {
+  while(number_of_pings_sent < 10000) {
     loop_start = std::chrono::system_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(loop_start - loop_end).count() > rate) {
       msg_out(tty_fd);
     }
   }
+
+  if (PINGER == 1) {
+    printf("Number of Pings Sent: %d\n", number_of_pings_sent);
+    printf("Number of Pongs recieved: %d\n", number_of_pongs_recieved);
+    printf("Number of Timeouts: %d\n", number_of_timeouts);
+    printf("Number of Mismatched Regex: %d\n", mismatched_regex);
+    printf("Number of Corrupted Timestamps: %d\n", corrupted_timestamp);
+    outputFile << "Number of Pings Sent: \t" << number_of_pings_sent << "\n";
+    outputFile << "Number of Pongs recieved: \t" << number_of_pongs_recieved << "\n";
+    outputFile << "Number of Timeouts: \t" << number_of_timeouts << "\n";
+    outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
+    outputFile.close();
+    latencyFile.close();
+  }
+  else {
+    printf("Number of Pings recieved: %d\n", number_of_pings_recieved);
+    printf("Number of Pongs Sent: %d\n", number_of_pongs_sent);
+    printf("Number of Mismatched Regex: %d\n", mismatched_regex);
+    printf("Number of Corrupted Timestamps: %d\n", corrupted_timestamp);
+    outputFile << "Number of Pongs Sent: \t" << number_of_pongs_sent << "\n";
+    outputFile << "Number of Pings recieved: \t" << number_of_pings_recieved << "\n";
+    outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
+    outputFile.close();
+    pongFile.close();
+  }
+  close(temp_tty_fd);
+  exit(1);
 
   return 0;
 }
