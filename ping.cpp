@@ -150,15 +150,23 @@ void msg_in(std::string buf, int tty_fd) {
       }
 
       else if (PingOrPong.compare("PING") == 0) { // If we got a PING message record where it came from
-        printf("Ping %d recieved from %s with send time %s\n", stoi(PingNumber), ID_tag.c_str(), TimeStampFromSender.c_str());
-        ++number_of_pings_recieved;
+        uint64_t tempTime = std::stoull(TimeStampFromSender);
+        uint64_t tempTimeOld = std::stoull(TimeStampFromSenderOld);
+        if (tempTime < tempTimeOld) {
+          // Corrupted timestamp
+          ++corrupted_timestamp;
+        }
+        else {
+          printf("Ping %d recieved from %s with send time %s\n", stoi(PingNumber), ID_tag.c_str(), TimeStampFromSender.c_str());
+          ++number_of_pings_recieved;
 
-        // Respond with pong
-        std::string temp = "PONG " + std::to_string(ID) + " : " + PingNumber + " : " + TimeStampFromSender + "\n";
-        int bytes_sent = write(tty_fd, temp.c_str(), temp.size() + 1);
-        ++number_of_pongs_sent;
-        if (PINGER == 0) {
-          pongFile << ID_tag.c_str() << "," << PingNumber.c_str() << "," << TimeStampFromSender << "," << std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - Timestamp).count() << "\n";
+          // Respond with pong
+          std::string temp = "PONG " + std::to_string(ID) + " : " + PingNumber + " : " + TimeStampFromSender + "\n";
+          int bytes_sent = write(tty_fd, temp.c_str(), temp.size() + 1);
+          ++number_of_pongs_sent;
+          if (PINGER == 0) {
+            pongFile << ID_tag.c_str() << "," << PingNumber.c_str() << "," << TimeStampFromSender << "," << std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - Timestamp).count() << "\n";
+          }
         }
       }
     }
@@ -187,11 +195,13 @@ void handler(int signum) {
     latencyFile.close();
   }
   else {
-    printf("Number of Pongs Sent: %d\n", number_of_pongs_sent);
     printf("Number of Pings recieved: %d\n", number_of_pings_recieved);
+    printf("Number of Pongs Sent: %d\n", number_of_pongs_sent);
     printf("Number of Mismatched Regex: %d\n", mismatched_regex);
+    printf("Number of Corrupted Timestamps: %d\n", corrupted_timestamp);
     outputFile << "Number of Pongs Sent: \t" << number_of_pongs_sent << "\n";
     outputFile << "Number of Pings recieved: \t" << number_of_pings_recieved << "\n";
+    outputFile << "Number of Corrupted Timestamps: \t" << corrupted_timestamp << "\n";
     outputFile.close();
     pongFile.close();
   }
