@@ -281,7 +281,7 @@ int main(int argc, char *argv[]) {
   tio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Raw mode
   tio.c_cflag = BAUD | CS8 | CREAD | CLOCAL; // 115200 BAUD, 8 bit Character Size mask, enable read, ignore control lines
   tio.c_oflag = 0; // Disable output flags
-  tio.c_cc[VMIN] = 1; // Minimum # of characters for noncanonical read
+  tio.c_cc[VMIN] = 17; // Minimum # of characters for noncanonical read
   tio.c_cc[VTIME] = 0; // No timeout for noncanonical read
   tcflush(tty_fd, TCIFLUSH); // Flush output/input data not transmitted
   tcsetattr(tty_fd, TCSANOW, &tio); // Set paramaters
