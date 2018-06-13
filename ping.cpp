@@ -157,6 +157,9 @@ void msg_in(std::string buf, int tty_fd) {
           ++corrupted_timestamp;
         }
         else {
+          // Everything normal
+          TimeStampFromSenderOld = TimeStampFromSender;
+
           printf("Ping %d recieved from %s with send time %s\n", stoi(PingNumber), ID_tag.c_str(), TimeStampFromSender.c_str());
           ++number_of_pings_recieved;
 
